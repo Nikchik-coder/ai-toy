@@ -4,23 +4,20 @@ import os
 import wave
 import time
 
-# --- Configuration ---
-HOST = '0.0.0.0'  # Listen on all available interfaces (use 'localhost' or '127.0.0.1' to listen only locally)
+# Configuration
+HOST = '0.0.0.0'  
 PORT = 8765
-# <<<--- SET THE PATH TO YOUR *CONVERTED* WAV AUDIO FILE ---<<<
-AUDIO_FILE_PATH = r'C:\Users\Doctor Who\Desktop\robottoy\audio_uploads\converted_audio.wav' # Make sure this file exists!
+AUDIO_FILE_PATH = r'C:\Users\Doctor Who\Desktop\robottoy\audio_uploads\converted_audio.wav'
 
-# --- Audio Parameters (MUST match the audio file AND ESP32 config) ---
+# Audio Parameters (MUST match the audio file AND ESP32 config)
 EXPECTED_RATE = 16000
 EXPECTED_WIDTH = 2  # 16-bit = 2 bytes
 EXPECTED_CHANNELS = 1  # Mono
 
-# --- Streaming Parameters ---
+# Streaming Parameters
 CHUNK_SIZE = 256 # Smaller chunk size that improved quality
-                 # Ensure this is an even number if width*channels > 1
 
-# --- Pacing Calculation ---
-# Calculate the duration of one chunk IN SECONDS
+# Pacing Calculation
 try:
     BYTES_PER_SECOND = EXPECTED_RATE * EXPECTED_WIDTH * EXPECTED_CHANNELS
     if BYTES_PER_SECOND == 0:
@@ -28,20 +25,14 @@ try:
     CHUNK_DURATION_S = CHUNK_SIZE / BYTES_PER_SECOND
 except ZeroDivisionError:
      print("!!! ERROR: Audio parameters (Rate, Width, Channels) cannot be zero.")
-     exit() # Stop if calculation is impossible
+     exit()
 except ValueError as e:
      print(f"!!! ERROR: Invalid audio parameters: {e}")
      exit()
 
-# Set the sleep duration multiplier relative to the chunk duration.
-# 1.0 = Sleep for exactly the time the chunk takes to play.
-# > 1.0 (e.g., 1.05, 1.1) = Sleep slightly longer to give ESP32 more buffer time.
-# < 1.0 (e.g., 0.95) = Sleep slightly less (might cause speed-up if too low).
-SLEEP_MULTIPLIER = 1. # Start with 1.0 or 1.05 (tune if needed)
+SLEEP_MULTIPLIER = 1.
 SLEEP_DURATION = CHUNK_DURATION_S * SLEEP_MULTIPLIER
-# --- --- --- --- ---
 
-# --- Keep track of connected clients ---
 connected_clients = set()
 
 async def send_audio_to_client(websocket, path):
@@ -50,12 +41,11 @@ async def send_audio_to_client(websocket, path):
     print(f"Attempting to send audio to {client_id}")
 
     try:
-        # Check file existence again just before opening
         if not os.path.exists(AUDIO_FILE_PATH):
-             raise FileNotFoundError # Trigger the specific exception handler
+             raise FileNotFoundError
 
         with wave.open(AUDIO_FILE_PATH, 'rb') as wf:
-            # --- Verify Audio Format ---
+            # Verify Audio Format
             rate = wf.getframerate()
             width = wf.getsampwidth()
             channels = wf.getnchannels()
@@ -69,12 +59,10 @@ async def send_audio_to_client(websocket, path):
                 await websocket.send("ERROR: Server audio format mismatch.")
                 await websocket.close(code=1003, reason="Audio format mismatch")
                 return
-            # --- Format verified ---
 
             print(f"Streaming '{os.path.basename(AUDIO_FILE_PATH)}' ({duration:.2f}s) to {client_id}...")
             print(f"Chunk size: {CHUNK_SIZE} bytes, Target sleep: {SLEEP_DURATION*1000:.2f} ms per chunk (Multiplier: {SLEEP_MULTIPLIER:.2f})")
 
-            # Calculate frames to read per chunk
             bytes_per_frame = width * channels
             if bytes_per_frame == 0:
                 print("!!! ERROR: Bytes per frame is zero, invalid audio parameters.")
@@ -87,36 +75,29 @@ async def send_audio_to_client(websocket, path):
 
             total_bytes_sent = 0
             start_time = time.monotonic()
-            expected_elapsed_time = 0.0 # Track expected time based on sleeps
+            expected_elapsed_time = 0.0
 
             while True:
-                chunk_start_time = time.monotonic() # Time before reading/sending this chunk
+                chunk_start_time = time.monotonic()
                 data = wf.readframes(frames_to_read)
                 if not data:
                     print(f"\nFinished streaming to {client_id}. Sent {total_bytes_sent} bytes.")
-                    break # End of file
+                    break
 
                 try:
                     await websocket.send(data)
                     total_bytes_sent += len(data)
 
-                    # --- Pacing Delay Logic ---
-                    # Calculate actual time spent reading file and sending over network for this chunk
+                    # Pacing Delay Logic
                     chunk_process_time = time.monotonic() - chunk_start_time
-
-                    # Calculate how much *more* time we need to sleep to match the desired SLEEP_DURATION
-                    # SLEEP_DURATION represents the target time between the *start* of sending chunks
                     remaining_sleep = SLEEP_DURATION - chunk_process_time
 
                     if remaining_sleep > 0:
                         await asyncio.sleep(remaining_sleep)
-                        expected_elapsed_time += SLEEP_DURATION # Add the ideal time interval
-                    else:
-                        # If processing/sending took longer than the ideal interval, don't sleep.
-                        # This means we are falling behind, but we still account for the ideal time.
                         expected_elapsed_time += SLEEP_DURATION
-                        # Optional: Print less frequently to avoid spamming the console
-                        if total_bytes_sent % (CHUNK_SIZE * 100) == 0: # Print warning every ~100 chunks
+                    else:
+                        expected_elapsed_time += SLEEP_DURATION
+                        if total_bytes_sent % (CHUNK_SIZE * 100) == 0:
                              print(f"WARN: Chunk processing ({chunk_process_time*1000:.2f}ms) took longer than ideal interval ({SLEEP_DURATION*1000:.2f}ms). Skipping sleep.")
 
                 except websockets.exceptions.ConnectionClosedOK:
@@ -127,7 +108,6 @@ async def send_audio_to_client(websocket, path):
                     break
                 except Exception as send_err:
                     print(f"\nError sending data to {client_id}: {send_err}")
-                    # Consider closing the connection on send error
                     await websocket.close(code=1011, reason="Server send error")
                     break
 
@@ -143,7 +123,7 @@ async def send_audio_to_client(websocket, path):
         try:
             await websocket.send("ERROR: Server could not find audio file.")
             await websocket.close(code=1011, reason="Server audio file missing")
-        except: pass # Ignore error if client disconnected already
+        except: pass
     except wave.Error as wave_err:
          print(f"!!! ERROR: Could not read WAV file: {wave_err}")
          try:
@@ -163,21 +143,15 @@ async def connection_handler(websocket, path):
     print(f"WS> Client connected: {client_id} (Path: {path})")
     connected_clients.add(websocket)
 
-    # --- Send audio when client connects ---
-    # Run the audio sending function as a separate task
-    send_task = None # Initialize to None
+    send_task = None
     try:
         send_task = asyncio.create_task(send_audio_to_client(websocket, path))
 
-        # Keep the connection alive, waiting for disconnect or other messages
         async for message in websocket:
-            # You could add logic here to handle text messages from the client
-            # e.g., if client sends "REQUEST_PLAY", "PAUSE", etc.
             if isinstance(message, str):
                 print(f"WS [{client_id}] >>> Received text: {message} (Ignoring)")
             else:
                  print(f"WS [{client_id}] >>> Received binary: {len(message)} bytes (Ignoring)")
-            # Note: If client sends message, audio streaming continues in its task
 
     except websockets.exceptions.ConnectionClosedError as close_err:
         print(f"WS> Client {client_id} disconnected abruptly: {close_err}")
@@ -189,46 +163,39 @@ async def connection_handler(websocket, path):
         print(f"WS> Cleaning up connection for {client_id}")
         if websocket in connected_clients:
              connected_clients.remove(websocket)
-        # Cancel the audio sending task if it's still running
         if send_task and not send_task.done():
              print(f"WS> Cancelling audio send task for {client_id}")
              send_task.cancel()
              try:
-                 await send_task # Allow cancellation to be processed
+                 await send_task
              except asyncio.CancelledError:
                  print(f"WS> Audio task for {client_id} cancelled successfully.")
              except Exception as task_e:
                  print(f"WS> Error waiting for task cancellation for {client_id}: {task_e}")
 
-
-# --- Start Server ---
 async def start_server():
     """Starts the WebSocket server."""
-    # Basic check before starting
     if not os.path.exists(AUDIO_FILE_PATH):
         print(f"!!! FATAL ERROR: Audio file not found: {AUDIO_FILE_PATH}")
         print("!!! Please ensure the path is correct and the file exists.")
-        return # Don't start the server
+        return
 
     print(f"Starting WebSocket audio streaming server on ws://{HOST}:{PORT}")
     print(f"Will stream file: {AUDIO_FILE_PATH}")
     print(f"Expected audio format: {EXPECTED_RATE}Hz, {EXPECTED_WIDTH*8}-bit, {EXPECTED_CHANNELS} channel(s)")
     print(f"Streaming with Chunk Size: {CHUNK_SIZE} bytes, Sleep Multiplier: {SLEEP_MULTIPLIER:.2f}")
 
-    # Define server settings with keepalive options
     server_settings = {
-        "ping_interval": 20,  # Send pings every 20 seconds
-        "ping_timeout": 15,   # Wait 15 seconds for pong response
-        "close_timeout": 10   # Time to wait for close handshake
+        "ping_interval": 20,
+        "ping_timeout": 15,
+        "close_timeout": 10
     }
 
-    # Use a try-except block specifically for server startup issues
     try:
         async with websockets.serve(connection_handler, HOST, PORT, **server_settings):
             print(f"WebSocket server is running. Listening on ws://{HOST}:{PORT}. Press Ctrl+C to stop.")
-            await asyncio.Future() # Run forever until stopped
+            await asyncio.Future()
     except OSError as os_err:
-         # Catch specific errors like "address already in use"
          if "address already in use" in str(os_err).lower():
               print(f"!!! FATAL ERROR: Port {PORT} is already in use on {HOST}.")
               print("!!! Please stop the other process or change the PORT in this script.")
@@ -243,6 +210,5 @@ if __name__ == "__main__":
         asyncio.run(start_server())
     except KeyboardInterrupt:
         print("\nCtrl+C received. Shutting down server...")
-    # Removed the generic Exception block here as start_server() now handles startup errors
     finally:
         print("Server shutdown sequence complete.")

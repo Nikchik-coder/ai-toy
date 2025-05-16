@@ -12,12 +12,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-try:
-    from config.config import langgraph_config
-except ImportError:
-    # Fallback default config if import fails
-    langgraph_config = {"configurable": {"thread_id": "default_thread"}}
-    print("Using default langgraph_config due to import error")
+from config.config import langgraph_config
+
 
 
 logger = logging.getLogger(__name__)

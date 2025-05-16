@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import sys
 
 
-# Add the parent directory to the Python path so modules can be found
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.utils import print_stream, load_json, setup_llm
 from database.sql_utils import initialize_db
