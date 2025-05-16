@@ -1,11 +1,13 @@
-# TedToy - ESP32 Voice Assistant
+# TedToy - ESP32 AI Toy
 
 ## Project Overview
-TedToy is a compact voice assistant built with an ESP32 microcontroller that can:
+TedToy is a compact AI toy built with an ESP32 microcontroller that can:
 1. Capture audio through a microphone connected to the ESP32
 2. Send the audio to a server via WebSocket 
 3. Process the audio through a speech-to-text (STT) -> LLM -> text-to-speech (TTS) pipeline
 4. Stream the audio response back to the ESP32 for playback
+
+While primarily designed as an interactive AI toy, TedToy can be easily transformed into a full-fledged voice assistant with minimal modifications.
 
 ## System Architecture
 
@@ -53,6 +55,7 @@ The schematics for the hardware setup can be found in the `schematic/` directory
 
 <!-- ![Schematic TedToy](schematic/Schematic_TedToy_2025-04-19.png) -->
 ![Fully integrated scheme](schematic/photo_2025-05-10_18-00-43.jpg)
+![Mishka AI](schematic/mishka.png)
 
 #### Microphone Connections (I2S_NUM_0)
 - SCK: GPIO 18
