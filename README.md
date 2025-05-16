@@ -48,7 +48,7 @@ While primarily designed as an interactive AI toy, TedToy can be easily transfor
 - I2S DAC/amplifier (e.g., MAX98357A)
 - Push button
 - Speaker
-- USB power source
+- Battery
 
 ### Wiring
 The schematics for the hardware setup can be found in the `schematic/` directory.
