@@ -34,12 +34,12 @@
 #define I2S_WRITE_TIMEOUT_MS 100   // Max time (ms) to wait for I2S DAC buffer space
 
 // --- WiFi Credentials ---
-const char* ssid = "988664 info-lan";         // <<<--- REPLACE
-const char* password = "40290678"; // <<<--- REPLACE
+const char* ssid = "your_ssid";         // <<<--- REPLACE
+const char* password = "your_password"; // <<<--- REPLACE
 
 // --- WebSocket Server Details ---
-const char* websockets_server_host = "192.168.0.101"; // <<<--- REPLACE WITH YOUR PC's IP ADDRESS!
-const uint16_t websocket_server_port = 8765;                  // <<<--- Port your Python WebSocket server listens on
+const char* websockets_server_host = "your_server_host"; // <<<--- REPLACE WITH YOUR PC's IP ADDRESS!
+const uint16_t websocket_server_port = your_port;                  // <<<--- Port your Python WebSocket server listens on
 const char* websocket_path = "/";                              // <<<--- Path for the WebSocket connection
 
 // --- Buffers ---

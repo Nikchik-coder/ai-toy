@@ -26,12 +26,12 @@
 #define I2S_WRITE_TIMEOUT_MS 100
 
 // --- WiFi Credentials ---
-const char* ssid = "988664 info-lan";
-const char* password = "40290678";
+const char* ssid = "your_ssid";
+const char* password = "your_password";
 
 // --- WebSocket Server Details ---
-const char* websockets_server_host = "192.168.0.101";
-const uint16_t websocket_server_port = 8765;
+const char* websockets_server_host = "your_server_host";
+const uint16_t websocket_server_port = your_port;
 const char* websocket_path = "/";
 
 // --- Buffers ---

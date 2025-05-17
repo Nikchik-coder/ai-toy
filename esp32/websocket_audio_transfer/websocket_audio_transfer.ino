@@ -17,12 +17,12 @@
 #define RECORD_DURATION_MS (10000)   // Duration to record in milliseconds (10 seconds)
 
 // --- WiFi Credentials ---
-const char* ssid = "988664 info-lan"; // Your Wi-Fi network name
-const char* password = "40290678";   // Your Wi-Fi network password
+const char* ssid = "your_ssid"; // Your Wi-Fi network name
+const char* password = "your_password";   // Your Wi-Fi network password
 
 // --- WebSocket Server Details ---
-const char* websocket_server_host = "192.168.0.101"; // <<<--- REPLACE WITH YOUR PYTHON SERVER'S IP ADDRESS
-const uint16_t websocket_server_port = 8765;         // <<<--- Port your Python WebSocket server will listen on
+const char* websocket_server_host = "your_server_host"; // <<<--- REPLACE WITH YOUR PYTHON SERVER'S IP ADDRESS
+const uint16_t websocket_server_port = your_port;         // <<<--- Port your Python WebSocket server will listen on
 const char* websocket_path = "/";                   // <<<--- Path for the WebSocket connection
 
 // --- Buffers ---
